@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("POSTGRES_PRISMA_URL")
+  relationMode = "prisma"
+}
+
+// model devices {
+//   id            Int      @id @default(autoincrement()) @db.UnsignedInt
+//   name          String   @unique(map: "name") @db.VarChar(40)
+//   in_stock      Boolean
+//   regular_price Float?   @db.Float
+//   colors        String?  @db.VarChar(1000)
+//   photos        String?  @db.VarChar(8000)
+//   shops         String?  @db.VarChar(1000)
+//   type          String   @db.VarChar(20)
+//   a             Float?   @db.Float
+//   b             Float?   @db.Float
+//   c             Float?   @db.Float
+//   size          Int
+//   brand         String   @db.VarChar(20)
+//   extra_details String?  @db.VarChar(1000)
+//   best_sellers  Boolean
+//   date_created  DateTime @db.DateTime(0)
+// }
+
+// model users {
+//   id           Int      @id @default(autoincrement()) @db.UnsignedInt
+//   fName        String?  @db.VarChar(30)
+//   lName        String?  @db.VarChar(30)
+//   email        String   @unique(map: "email") @db.VarChar(50)
+//   password     String?  @db.VarChar(50)
+//   phone        String?  @db.VarChar(20)
+//   address      String?  @db.VarChar(50)
+//   city         String?  @db.VarChar(50)
+//   state        String?  @db.VarChar(50)
+//   zip_code     String?  @db.VarChar(50)
+//   country      String?  @db.VarChar(50)
+//   company      String?  @db.VarChar(50)
+//   isSubscribed Boolean? @default(false)
+//   msg          String?  @db.VarChar(1000)
+//   is_admin     Boolean? @default(false)
+// }
+
+model AuthUser {
+    id            String        @id @unique
+    email         String        @unique
+    firstName     String
+    lastName      String
+    role          Role          @default(USER)
+    verified      Boolean       @default(false)
+    receiveEmail  Boolean       @default(true)
+    token         String?    @unique
+    createdAt      DateTime          @default(now()) @db.Timestamp(6)
+    updatedAt       DateTime        @updatedAt @db.Timestamp(6)
+    auth_session  AuthSession[]
+    auth_key      AuthKey[]
+
+  @@map("auth_user")
+}
+
+model AuthSession {
+  id             String   @id @unique
+  user_id        String
+  active_expires BigInt
+  idle_expires   BigInt
+  auth_user      AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("auth_session")
+}
+
+model AuthKey {
+  id              String   @id @unique
+  hashed_password String?
+  user_id         String
+  primary_key     Boolean
+  expires         BigInt?
+  auth_user       AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("auth_key")
+}
+
+enum Role {
+  USER
+  PREMIUM
+  ADMIN
+}
